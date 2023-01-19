@@ -10,7 +10,7 @@ class SYM:
         self.has = {}
 
     def Add(self, x):
-        if(self.has[x]):
+        if(self.has.get(x)):
             self.has[x] = self.has[x] + 1
         else:
             self.count = self.count + 1
@@ -30,7 +30,7 @@ class SYM:
             return 0
 
         probs = []
-        for value in dict.values():
+        for value in self.has.values():
             probs.append((value / self.len))
 
         for prob in probs:
