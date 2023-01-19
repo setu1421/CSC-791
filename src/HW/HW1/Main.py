@@ -2,9 +2,10 @@ from TestEngine import TestEngine
 import sys
 
 if __name__ == "__main__":    
+    fails = 0
     test_list1 = [1, 1, 1, 1, 2, 2, 3]
-    print(TestEngine.RunTest(test_list1, "num"))
+    if TestEngine.RunTest(test_list1, "num") == False: fails = fails + 1
     test_list2 = ["a", "a", "a", "a", "b", "b", "c"] 
-    print(TestEngine.RunTest(test_list2, "sym"))
+    if TestEngine.RunTest(test_list2, "sym") == False: fails = fails + 1
     
-    sys.exit(1)
+    sys.exit(fails)
