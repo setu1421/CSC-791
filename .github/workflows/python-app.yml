@@ -27,5 +27,4 @@ jobs:
       run: |
         cd ./src/HW/HW1
         python Main.py
-      - run: echo "🍏 This job's status is ${{ job.status }}."
          
