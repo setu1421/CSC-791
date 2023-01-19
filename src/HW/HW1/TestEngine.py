@@ -1,6 +1,6 @@
 from NUM import NUM
 from SYM import SYM
-from Utils import Rand
+from Utils import Rand, FileWriter
 from Config import *
 
 def test_sym():
@@ -39,22 +39,39 @@ def test_the():
 
 def runAllTest():
     fails = 0
+    list = []
     # Test 1
     test_status = test_sym()
     if test_status == False: 
         fails = fails + 1
+        list.append("❌ fail:  sym") 
+    else:
+       list.append("✅ pass:  sym")  
     # Test 2
     test_status = test_num()
     if test_status == False: 
         fails = fails + 1
+        list.append("❌ fail:  num") 
+    else:
+        list.append("✅ pass:  num")
+
     # Test 3
     test_status = test_rand()
     if test_status == False:
         fails = fails + 1 
+        list.append("❌ fail:  rand") 
+    else:
+        list.append("✅ pass:  rand")
+
 
     # Test 4
     test_status = test_the()
     if test_status == False:
-        fails = fails + 1    
+        fails = fails + 1
+        list.append("❌ fail:  the")     
+    else:
+        list.append("✅ pass:  the")
+
+    FileWriter.uploadTestResults(list)    
 
     return fails     
