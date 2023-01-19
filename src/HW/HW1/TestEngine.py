@@ -1,7 +1,7 @@
 from NUM import NUM
 from SYM import SYM
 from Utils import Rand
-import sys
+from Config import *
 
 def test_sym():
     sym = SYM()
@@ -33,7 +33,11 @@ def test_rand():
 
     return (m1 == m2) and (0.3 == Rand.rnd(m1, 1))
 
-if __name__ == "__main__":
+def test_the():
+    return True if len(config) > 0 else False
+
+
+def runAllTest():
     fails = 0
     # Test 1
     test_status = test_sym()
@@ -48,4 +52,9 @@ if __name__ == "__main__":
     if test_status == False:
         fails = fails + 1 
 
-    sys.exit(fails)      
+    # Test 4
+    test_status = test_the()
+    if test_status == False:
+        fails = fails + 1    
+
+    return fails     
