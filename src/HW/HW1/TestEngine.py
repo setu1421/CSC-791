@@ -3,6 +3,7 @@ from SYM import SYM
 from Utils import Rand, FileWriter
 from Config import *
 
+# Test case of sym
 def test_sym():
     sym = SYM()
     input = ["a", "a", "a", "a", "b", "b", "c"]
@@ -10,7 +11,7 @@ def test_sym():
         sym.Add(val)
     return ((sym.Mid() == "a") and (sym.Div() - 1.379) < 0.01)
 
-
+# Test case for num
 def test_num():
     num = NUM()
     input = [1,1,1,1,2,2,3]
@@ -18,6 +19,7 @@ def test_num():
         num.Add(val)   
     return ((num.Mid() - 1.5714285714285714) < 0.01 and (num.Div() - 0.787) < 0.01)
 
+# Test case for rand
 def test_rand():
     num1 = NUM()
     num2 = NUM()
@@ -33,10 +35,11 @@ def test_rand():
 
     return (m1 == m2) and (0.3 == Rand.rnd(m1, 1))
 
+# Test case for the
 def test_the():
     return True if len(config) > 0 else False
 
-
+# Run all test cases and return
 def runAllTest():
     fails = 0
     list = []
@@ -71,7 +74,8 @@ def runAllTest():
         list.append("❌ fail:  the")     
     else:
         list.append("✅ pass:  the")
-
+    
+    # Upload the test results 
     FileWriter.uploadTestResults(list)    
 
     return fails     

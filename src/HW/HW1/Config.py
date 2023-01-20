@@ -1,3 +1,4 @@
+# Default Configurations
 config = {
     'dump': False,
     'go': "data",

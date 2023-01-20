@@ -1,6 +1,8 @@
 import math
 
+# Class for SYM
 class SYM:
+    # Constructor of SYM
     def __init__(self):
         self.count = 0
         self.len = 0
@@ -8,7 +10,7 @@ class SYM:
         self.most = 0
         self.mode = ""
         self.has = {}
-
+    # Add a new string
     def Add(self, x):
         if(self.has.get(x)):
             self.has[x] = self.has[x] + 1
@@ -21,10 +23,10 @@ class SYM:
         if(self.has[x] > self.most):
             self.most = self.has[x]
             self.mode = x    
-
+    # Find the mode of string
     def Mid(self):
         return self.mode
-
+    # Find the entropy of string
     def Div(self):
         if(self.len <= 0): 
             return 0
