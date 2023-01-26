@@ -18,7 +18,7 @@ class NUM:
         self.mean = self.mean + (delta / self.len)
         self.moment = self.moment + (delta * (num - self.mean))  
         self.high = max(self.high, num)
-        self.min = min(self.min, num)
+        self.low = min(self.low, num)
     
     # Find mean
     def Mid(self):

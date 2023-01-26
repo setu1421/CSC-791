@@ -14,9 +14,9 @@ class DATA:
         if(type == "file"):
             data = CSVReader.readCSVFile(filename)
 
-        self.CreateCols(data[1])   
+        self.CreateCols(data[0])   
         
-        for row in data[2]:
+        for row in data[1]:
             self.Add(row)
 
     # Create columns
