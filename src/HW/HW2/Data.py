@@ -44,7 +44,7 @@ class DATA:
             if pos not in self.Skip:
                 self.Cols[pos].Add(value)
             pos = pos + 1 
-
+   
     def Clone(self, rows = None):
         data = []
 
@@ -55,6 +55,26 @@ class DATA:
             for row in rows:
                 data.append(row.cells)        
         return DATA("clone", None, (self.Header, data))
+
+    def Stats(self, what, cols = None, nPlaces = 2):
+        pos = 0
+        finalString = ""
+
+        for col in self.Cols:
+            if (pos not in self.Skip) and (cols and pos in cols):
+                if(what == "mid"):
+                    mid = str(round(col.num.Mid(), nPlaces)) if col.isNum else str(col.sym.Mid())
+                    finalString = finalString + ":" + col.txt + " " + mid + " "
+                elif (what == "div"):
+                    div = str(round(col.num.Div(), nPlaces)) if col.isNum else str(round(col.sym.Div(), 2))  
+                    finalString = finalString + ":" + col.txt + " " + div + " "  
+                else:
+                    return "Unrecognized stat function"    
+
+            pos = pos + 1
+
+        return finalString            
+
 
 
 

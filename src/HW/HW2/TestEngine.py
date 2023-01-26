@@ -47,11 +47,19 @@ def test_csv():
     row_len = len(ret[1])
     return col_len*row_len == 8*398
 
+# Test case for data
 def test_data():
     data = DATA("file", "auto93.csv")
 
     return (len(data.Rows) == 398 and data.Cols[data.Y[0]].num.weight == -1.0
     and data.Cols[data.X[1]].at == 1 and len(data.X) == 4)
+
+def test_stats():
+    data = DATA("file", "auto93.csv")
+    data.Stats("mid", data.X, 2)
+    data.Stats("div", None, 2)
+
+    return True
      
 
 # Run all test cases and return
@@ -105,6 +113,13 @@ def runAllTest():
         list.append("❌ fail:  data")     
     else:
         list.append("✅ pass:  data")  
+
+    test_status = test_stats()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  stats")     
+    else:
+        list.append("✅ pass:  stats")          
     
     # Upload the test results 
     FileWriter.uploadTestResults(list)    
