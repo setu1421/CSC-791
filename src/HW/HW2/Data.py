@@ -35,7 +35,8 @@ class DATA:
                 self.Cols.append(COL(name, pos))
 
             pos = pos + 1   
- 
+
+    # Add cells
     def Add(self, cells):
         pos = 0
         self.Rows.append(ROW(cells))
@@ -44,7 +45,8 @@ class DATA:
             if pos not in self.Skip:
                 self.Cols[pos].Add(value)
             pos = pos + 1 
-   
+
+    # Clone the data
     def Clone(self, rows = None):
         data = []
 
@@ -56,9 +58,10 @@ class DATA:
                 data.append(row.cells)        
         return DATA("clone", None, (self.Header, data))
 
+    # Retrieve status
     def Stats(self, what, cols = None, nPlaces = 2):
         pos = 0
-        finalString = ""
+        finalString = what
 
         for col in self.Cols:
             if (pos not in self.Skip) and (cols and pos in cols):

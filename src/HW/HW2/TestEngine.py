@@ -54,6 +54,7 @@ def test_data():
     return (len(data.Rows) == 398 and data.Cols[data.Y[0]].num.weight == -1.0
     and data.Cols[data.X[1]].at == 1 and len(data.X) == 4)
 
+# Test case for stats
 def test_stats():
     data = DATA("file", "auto93.csv")
     data.Stats("mid", data.X, 2)
@@ -63,7 +64,7 @@ def test_stats():
      
 
 # Run all test cases and return
-def runAllTest():
+def runAllTest(configs = None):
     fails = 0
     list = []
     # Test 1
@@ -113,7 +114,8 @@ def runAllTest():
         list.append("❌ fail:  data")     
     else:
         list.append("✅ pass:  data")  
-
+    
+    # Test 7
     test_status = test_stats()
     if test_status == False:
         fails = fails + 1

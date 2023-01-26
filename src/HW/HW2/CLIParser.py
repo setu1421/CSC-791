@@ -29,8 +29,9 @@ def coerce(s):
 # Find the configurations    
 def settings(s):
   t = {}
-  for k, v in re.findall('\n[\s]+[-][^\s]+[\s]+[-][-]([^\s]+)[^\n]+= ([^\s]+)', s):
-    t[k] = coerce(v)
+  if len(s) > 0:
+    for k, v in re.findall('\n[\s]+[-][^\s]+[\s]+[-][-]([^\s]+)[^\n]+= ([^\s]+)', s):
+      t[k] = coerce(v)
    
   return t
 
