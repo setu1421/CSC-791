@@ -28,7 +28,7 @@ class FileWriter:
     # Upload Test Results to a File
     @staticmethod
     def uploadTestResults(items):
-        file_path = os.getcwd() + "/etc/out/script.out"
+        file_path = os.getcwd() + "/etc/out/data.out"
         print(os.getcwd())
         with open(file_path,'w+') as f:
             f.write('\n'.join(items))
