@@ -42,9 +42,9 @@ class COL:
     # Calculate Distance
     def Distance(self, s1, s2):
         if(self.isNum):
-            self.num.Distance(s1, s2)
+            return self.num.Distance(s1, s2)
         else:
-            self.sym.Distance(s1, s2)
+            return self.sym.Distance(s1, s2)
 
 
 

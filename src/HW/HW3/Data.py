@@ -119,7 +119,7 @@ class DATA:
     def Half(self, rows = None, above = None):
         rows = rows if rows else self.Rows
         some = Utils.Many(rows, config["sample"])  
-        A = above if above else Utils.Any(rows)
+        A = above if above else Utils.Any(rows)[0]
         B = self.around(A, some)[int((config["faraway"]  * len(rows)) // 1)]["row"]
         C = self.Distance(A, B)
 
@@ -132,7 +132,7 @@ class DATA:
         sorted_projections = sorted(projections, key= lambda x: x[2])
 
         n = 0
-        half = int(len(rows / 2))    
+        half = int(len(rows)/ 2)    
         mid = None
 
         for proj in sorted_projections:

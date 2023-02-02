@@ -61,6 +61,48 @@ def test_stats():
     data.Stats("div", None, 2)
 
     return True
+
+# Test case for clone
+def test_clone():
+    data1 = DATA("file", config["file"])   
+    data2 = data1.Clone()
+    result = (len(data1.Rows) == len(data2.Rows) and 
+    data1.X[0] == data2.X[0] and len(data1.X) == len(data2.X))
+
+    return result 
+
+# Test case for around
+def test_around():
+    data = DATA("file", config["file"]) 
+    vals = data.around(data.Rows[0], data.Rows)
+    
+    for ind,val in enumerate(vals):
+        if (ind % 50) == 0:
+            print(val)
+
+    return True  
+
+# Test case for half
+def test_half():
+    data = DATA("file", config["file"]) 
+    res = data.Half()
+
+    return True
+
+# Test case for cluster
+def test_cluster():
+    data = DATA("file", config["file"]) 
+    node = data.Cluster()
+
+    return True 
+
+# Test case for cluster
+def test_sway():
+    data = DATA("file", config["file"]) 
+    node = data.Sway()
+
+    return True         
+
      
 
 # Run all test cases and return
@@ -121,7 +163,47 @@ def runAllTest(configs = None):
         fails = fails + 1
         list.append("❌ fail:  stats")     
     else:
-        list.append("✅ pass:  stats")          
+        list.append("✅ pass:  stats")   
+
+    # Test 8
+    test_status = test_clone()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  clone")     
+    else:
+        list.append("✅ pass:  clone") 
+
+    # Test 9
+    test_status = test_around()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  around")     
+    else:
+        list.append("✅ pass:  around")  
+
+    # Test 10
+    test_status = test_half()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  half")     
+    else:
+        list.append("✅ pass:  half") 
+
+    # Test 11
+    test_status = test_cluster()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  cluster")     
+    else:
+        list.append("✅ pass:  cluster")   
+
+    # Test 12
+    test_status = test_sway()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  sway")     
+    else:
+        list.append("✅ pass:  sway")                
     
     # Upload the test results 
     FileWriter.uploadTestResults(list)    
