@@ -45,7 +45,8 @@ class NUM:
         if n == "?": 
             return n 
         else: 
-            return (n - self.low) / (self.high - self.low + (10**-32))  
+            n = float(n)
+            return (n - self.low) / (self.high - self.low + (10**-32))   
     
     # Calculate the distance between two numbers
     def Distance(self, n1, n2): 

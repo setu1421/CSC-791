@@ -1,6 +1,7 @@
 import math
 import os
 from csv import reader
+import random
 
 # Random Number Generator Utility Class
 class Rand:
@@ -54,6 +55,26 @@ class CSVReader:
                 rows.append(row)
 
         return (col_names, rows)
+
+class Utils:
+    # Calculate cosine value
+    @staticmethod
+    def Cosine(a, b, c):
+        x1 = (a**2 + c**2 - b**2) / (2*c)
+        x2 = max(0, min(1, x1))
+        y  = (a**2 - x2**2)**.5
+        return x2, y
+
+    # Return a sample of n items
+    @staticmethod
+    def Many(data, n):
+        return random.sample(data, n)
+    
+    # Return one item randomly
+    @staticmethod
+    def Any(data):
+        return random.sample(data, 1)    
+
 
 
 
