@@ -3,6 +3,8 @@ from Sym import SYM
 from Utils import *
 from Config import *
 from Data import *
+from Grid import *
+import os
 
 # Test case of sym
 def test_sym():
@@ -102,6 +104,13 @@ def test_sway():
     node = data.Sway()
 
     return True         
+
+# Test case for repCols
+def test_repCols():
+    print(os.getcwd())
+    t = Grid.dofile(os.getcwd() + "/data/repgrid1.csv") 
+    print(t)
+
 
      
 
@@ -203,7 +212,15 @@ def runAllTest(configs = None):
         fails = fails + 1
         list.append("❌ fail:  sway")     
     else:
-        list.append("✅ pass:  sway")                
+        list.append("✅ pass:  sway") 
+
+    # Test 13
+    test_status = test_repCols()
+    if test_status == False:
+        fails = fails + 1
+        list.append("❌ fail:  repcols")     
+    else:
+        list.append("✅ pass:  repcols")                   
     
     # Upload the test results 
     FileWriter.uploadTestResults(list)    

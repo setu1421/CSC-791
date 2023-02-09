@@ -29,7 +29,7 @@ class FileWriter:
     # Upload Test Results to a File
     @staticmethod
     def uploadTestResults(items):
-        file_path = os.getcwd() + "/etc/out/cluster.out"
+        file_path = os.getcwd() + "/etc/out/grid.out"
         with open(file_path,'w+') as f:
             f.write('\n'.join(items))
 
@@ -72,7 +72,8 @@ class Utils:
     # Return one item randomly
     @staticmethod
     def Any(data):
-        return random.sample(data, 1)    
+        return random.sample(data, 1)  
+ 
 
 
 
