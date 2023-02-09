@@ -1,6 +1,8 @@
 import math
 
+# Class for SYM
 class SYM:
+    # Constructor of SYM
     def __init__(self, at=None, txt=None):
         self.at = at if at else 0
         self.txt = txt if txt else ""
@@ -8,7 +10,8 @@ class SYM:
         self.has = {}
         self.most = 0
         self.mode = None
-
+    
+     # Add a new string
     def add(self, x):
         if not x == "?":
             self.n +=1
@@ -16,9 +19,12 @@ class SYM:
             if self.has[x] > self.most:
                 self.most = self.has[x]
                 self.mode = x
+
+    # Find the mode of string
     def mid(self):
         return self.mode
 
+    # Find the entropy of string 
     def div(self):
         def fun(p):
             return p * math.log2(p)
@@ -26,10 +32,12 @@ class SYM:
         for _, n in self.has.items():
             e = e + fun(n/self.n)
         return -e
-
+    
+    # Round of symbolic values
     def rnd(self,x,n):
         return x
     
+    # Calculate distance between two values
     def dist(self, s1, s2):
         if s1=="?" and s2=="?":
             return 1

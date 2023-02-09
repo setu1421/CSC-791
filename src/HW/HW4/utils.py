@@ -1,10 +1,13 @@
 import sys, re, math, copy, json
 from config import *
 from pathlib import Path
+import os
 
+# Retrieve settings
 def settings(s):
     return dict(re.findall("\n[\s]+[-][\S]+[\s]+[-][-]([\S]+)[^\n]+= ([\S]+)",s))
 
+# Cast types and return
 def coerce(s):
     if s == 'true':
         return True
@@ -17,6 +20,7 @@ def coerce(s):
     else:
         return s
 
+# Read command line arguments
 def cli(options):
     args = sys.argv[1:]
     for k, v in options.items():
@@ -31,23 +35,28 @@ def cli(options):
         options[k] = coerce(v)
     return options
 
+# Add Examples
 def eg(key, str, fun):
     egs[key] = fun
     global help
     help = help + '  -g '+ key + '\t' + str + '\n'
 
+# Round to Integer
 def rint(lo,hi):
     return 4 or math.floor(0.5 + rand(lo,hi))
 
+# Return random number
 def rand(lo = 0, hi = 1):
     global Seed
     Seed = (16807 * Seed) % 2147483647
     return lo + (hi-lo) * Seed / 2147483647
 
+# Round to n places
 def rnd(n, nPlaces = 3):
     mult = 10**nPlaces
     return math.floor(n * mult + 0.5) / mult
 
+# Read csv file
 def csv(sFilename, fun):
     sFilename = Path(sFilename)
     if sFilename.exists() and sFilename.suffix == '.csv':
@@ -69,6 +78,7 @@ def kap(t, fun):
         u[k or len(u)] = v
     return u
 
+# Find cosine distance
 def cosine(a,b,c):
     den = 1 if c == 0 else 2*c
     x1 = (a**2 + c**2 - b**2) / den
@@ -80,15 +90,18 @@ def cosine(a,b,c):
         print('x2', x2)
     return x2, y
 
+# Return any number
 def any(t):
     return t[rint(0, len(t) - 1)]
 
+# Return a sample
 def many(t,n):
     u=[]
     for _ in range(1,n+1):
         u.append(any(t))
     return u
 
+# Show the cluster
 def show(node, what, cols, nPlaces, lvl = 0):
   if node:
     print('|..' * lvl, end = '')
@@ -99,9 +112,11 @@ def show(node, what, cols, nPlaces, lvl = 0):
     show(node.get('left'), what,cols, nPlaces, lvl+1)
     show(node.get('right'), what,cols,nPlaces, lvl+1)
 
+# Make a deepcopy of an object
 def deepcopy(t):
     return copy.deepcopy(t)
 
+# Find Rep Cols
 def repCols(cols, DATA):
     cols = deepcopy(cols)
     for col in cols:
@@ -114,6 +129,7 @@ def repCols(cols, DATA):
     cols.insert(0, first_col)
     return DATA(cols)
 
+# Find Rep Rows
 def repRows(t, DATA, rows):
     rows = deepcopy(rows)
     for j, s in enumerate(rows[-1]):
@@ -127,12 +143,14 @@ def repRows(t, DATA, rows):
             row.append(u[len(u) - 1])
     return  DATA(rows)
 
+# Read Rep Grid from file
 def dofile(sFile):
     file = open(sFile, 'r', encoding='utf-8')
     text  = re.findall(r'(?<=return )[^.]*', file.read())[0].replace('{', '[').replace('}',']').replace('=',':').replace('[\n','{\n' ).replace(' ]',' }' ).replace('\'', '"').replace('_', '"_"')
     file.close()
     return json.loads(re.sub("(\w+):", r'"\1":', text))
 
+# Print dictionary object
 def oo(t):
     d = t.__dict__
     d['a'] = t.__class__.__name__
@@ -140,6 +158,7 @@ def oo(t):
     d = dict(sorted(d.items()))
     print(d)
 
+# Transpose matrix
 def transpose(t):
     u=[]
     for i in range(len(t[1])):
@@ -148,6 +167,7 @@ def transpose(t):
             u[i].append(t[j][i])
     return u
 
+# Retrive RepGrid
 def repgrid(sFile, DATA):
     t = dofile(sFile)
     rows = repRows(t, DATA, transpose(t['cols']))
@@ -156,6 +176,7 @@ def repgrid(sFile, DATA):
     show(cols.cluster(),"mid",cols.cols.all,1)
     repPlace(rows)
 
+# RepPlace Function
 def repPlace(data):
     n,g = 20,{}
     for i in range(1, n+1):
@@ -173,3 +194,13 @@ def repPlace(data):
     print('')
     for y in range(1,maxy+1):
         print(' '.join(g[y].values()))
+
+
+# FileWriter Utility Class
+class FileWriter:
+    # Upload Test Results to a File
+    @staticmethod
+    def uploadTestResults(items, filename):
+        file_path = os.getcwd() + "/etc/out/" + filename + ".out"
+        with open(file_path,'w+') as f:
+            f.write('\n'.join(items))        
