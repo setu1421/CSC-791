@@ -25,5 +25,5 @@ jobs:
         python -m pip install --upgrade pip
     - name: Run Unit Tests
       run: |
-        python ./src/HW/HW3/Main.py
+        python ./src/HW/HW4/main.py
          
