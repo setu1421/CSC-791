@@ -1,205 +1,107 @@
-from Utils import *
-from Col import *
-from Row import *
-import math
-from Config import *
+from row import ROW
+from cols import COLS
+from utils import *
+from operator import itemgetter
 
 class DATA:
-    def __init__(self, type, filename = None, data = None):
-        self.Cols = []
-        self.X = []
-        self.Y = []
-        self.Skip = []
-        self.Rows = []
-        self.Header = []
-
-        if(type == "file"):
-            data = CSVReader.readCSVFile(filename)
-
-        self.CreateCols(data[0])   
-        
-        for row in data[1]:
-            self.Add(row)
-
-    # Create columns
-    def CreateCols(self, colNames):
-        self.Header = colNames  
-        pos = 0
-        for name in colNames:
-            if name and (name[-1] == '-' or name[-1] == "+" or name[-1] == "!"):
-                self.Y.append(pos)
-                self.Cols.append(COL(name, pos))
-            elif name and (name[-1] == "X"):
-                self.Skip.append(pos)
-                self.Cols.append(COL(name, pos))    
-            elif name:
-                self.X.append(pos)
-                self.Cols.append(COL(name, pos))
-
-            pos = pos + 1   
-
-    # Add cells
-    def Add(self, cells):
-        pos = 0
-        self.Rows.append(ROW(cells))
-
-        for value in cells:
-            if pos not in self.Skip:
-                self.Cols[pos].Add(value)
-            pos = pos + 1 
-
-    # Clone the data
-    def Clone(self, rows = None):
-        data = []
-
-        if rows is None:
-            for row in self.Rows:
-                data.append(row.cells)
+    def __init__(self, src):
+        self.rows = []
+        self.cols = None
+        if isinstance(src, str):
+            csv(src, self.add)
         else:
-            for row in rows:
-                data.append(row.cells)        
-        return DATA("clone", None, (self.Header, data))
+            for row in src:
+                self.add(row)
 
-    # Retrieve status
-    def Stats(self, what, cols = None, nPlaces = 2):
-        pos = 0
-        finalString = what
-
-        for col in self.Cols:
-            if (pos not in self.Skip) and (cols and pos in cols):
-                if(what == "mid"):
-                    mid = str(round(col.num.Mid(), nPlaces)) if col.isNum else str(col.sym.Mid())
-                    finalString = finalString + ":" + col.txt + " " + mid + " "
-                elif (what == "div"):
-                    div = str(round(col.num.Div(), nPlaces)) if col.isNum else str(round(col.sym.Div(), 2))  
-                    finalString = finalString + ":" + col.txt + " " + div + " "  
-                else:
-                    return "Unrecognized stat function"    
-
-            pos = pos + 1
-
-        return finalString  
+    def add(self, t):
+        if self.cols:
+            t = ROW(t) if type(t) == list else t
+            self.rows.append(t)
+            self.cols.add(t)
+        else:
+            self.cols=COLS(t)
     
-    # Find if Row1 dominates Row2
-    def Better(self, row1, row2):
-        s1 = 0.0
-        s2 = 0.0
-
-        for pos in self.Y:
-            res1 = self.Cols[pos].Norm(str(row1.cells[pos]))
-            x = res1[1] if res1[0] == True else res1[1]
-            w = self.Cols[pos].num.weight if self.Cols[pos].isNum else 1
-            res2 = self.Cols[pos].Norm(str(row2.cells[pos]))
-            y = res2[1] if res2[0] == True else res2[1]
-            s1 = s1 - math.exp(w * (x - y) / len(self.Y))
-            s2 = s2 - math.exp(w * (y - x) / len(self.Y))
-
-        return ((s1 / len(self.Y)) < (s1 / len(self.Y))) 
-    
-    # Calculate distance between row1 and row2
-    def Distance(self, row1, row2):
-        n = 0
-        d = 0.0
-
-        for pos in self.X:
-            n = n + 1
-            d = d + self.Cols[pos].Distance(str(row1.cells[pos]), str(row2.cells[pos]))
-
-        return math.pow((d/n), (1 / config["distcoeff"]))    
-    
-    # Sort other rows based on row1 
-    def around(self, row1, rows):
-        rows = rows if rows else self.Rows
-        def func(row2):
-            return {'row': row2, 'dist': self.Distance(row1, row2)}
-        
-        return sorted(list(map(func, rows)), key = lambda k: k['dist'])
-    
-    # Divide data using two far points
-    def Half(self, rows = None, above = None):
-        rows = rows if rows else self.Rows
-        some = Utils.Many(rows, config["sample"])  
-        A = above if above else Utils.Any(rows)[0]
-        B = self.around(A, some)[int((config["faraway"]  * len(rows)) // 1)]["row"]
-        C = self.Distance(A, B)
-
-        left, right, projections = [], [], []
-
-        for row in rows:
-            distances = Utils.Cosine(self.Distance(row, A), self.Distance(row, B), C)
-            projections.append((row, distances[0], distances[1]))
-
-        sorted_projections = sorted(projections, key= lambda x: x[2])
-
-        n = 0
-        half = int(len(rows)/ 2)    
-        mid = None
-
-        for proj in sorted_projections:
-            if(n <= half):
-                left.append(proj[0])
-                mid = proj[0]
+    def stats(self, what, cols, nPlaces):
+        def fun(_, col):
+            if what == 'div':
+                val = col.div()
             else:
-                right.append(proj[0]) 
-                
-            n = n + 1  
-
-        return (left, right, A, B, mid, C)    
-
-    # Recursively cluster the rows
-    def Cluster(self, rows = None, min =  float('inf'), above = None):
-        rows = rows if rows else self.Rows
-        min = min if (min == float('inf')) else math.pow(len(rows), config["minstopclusters"])
-        node = {"data": self.Clone(rows)}
-
-        if(len(rows) > 2 * min):
-            left, right, A, B = self.Half(rows, above)
-            node.left = self.Cluster(left, min, A)
-            node.right = self.Cluster(right, min, B)
-
-        return node 
-
-    # Return best half recursively
-    def Sway(self, rows = None, min =  float('inf'), above = None):   
-        rows = rows if rows else self.Rows
-        min = min if (min == float('inf')) else math.pow(len(rows), config["minstopclusters"])
-        node = {"data": self.Clone(rows)}
-
-        if(len(rows) > 2 * min):
-            left, right, A, B = self.Half(rows, above)
-            if self.Better(A, B):
-                left, right, A, B = right, left, B, A
-            node['left'] = self.Sway(left, min, A)
-        return node 
-
-    # prints the tree generated from `DATA:tree`
-    def show(self, node, what, cols, nPlaces, lvl): 
-        if node: 
-            if lvl is None:
-                lvl = 0
-            for i in range(0, lvl): 
-                print("| ", end = "")
-            print(len(self.rows), end = "  ")
-
-            if not node.left or lvl == 0: 
-                print(self.Stats("mid", node["data"].Y, nPlaces))
-            
-            # recursive call 
-            self.show(node.left, what, cols, nPlaces, lvl+1)
-            self.show(node.right, what, cols, nPlaces, lvl+1)           
-
-
-
-
-
-
-           
-
-
-
+                val = col.mid()
+            return col.rnd(val, nPlaces),col.txt
+        return kap(cols or self.cols.y, fun)
     
+    def dist(self, row1, row2, cols = None):
+        n,d = 0,0
+        for col in cols or self.cols.x:
+            n = n + 1
+            d = d + col.dist(row1.cells[col.at], row2.cells[col.at])**the['p']
+        return (d/n)**(1/the['p'])
 
+    def clone(self, init = {}):
+        data = DATA([self.cols.names])
+        _ = list(map(data.add, init))
+        return data
+
+    def around(self, row1, rows = None, cols = None):
+        def function(row2):
+            return {'row' : row2, 'dist' : self.dist(row1,row2,cols)} 
+        return sorted(list(map(function, rows or self.rows)), key=itemgetter('dist'))
+
+    def furthest(self, row1, rows = None, cols = None):
+        t=self.around(row1,rows,cols)
+        return t[len(t) - 1]
+
+    def sway(self, rows=None, min=None, cols=None, above=None):
+        rows = rows or self.rows
+        min = min or len(rows) ** the['min']
+        cols = cols or self.cols.x
+        node = {'data': self.clone(rows)}
+        if len(rows) > 2 * min:
+            left, right, node['A'], node['B'], node['mid'], _ = self.half(rows, cols, above)
+            if self.better(node['B'], node['A']):
+                left, right, node['A'], node['B'] = right, left, node['B'], node['A']
+            node['left'] = self.sway(left, min, cols, node['A'])
+        return node
+
+    def better(self, row1, row2):
+        s1, s2, ys = 0, 0, self.cols.y
+        for col in ys:
+            x = col.norm(row1.cells[col.at])
+            y = col.norm(row2.cells[col.at])
+            s1 = s1 - math.exp(col.w * (x - y) / len(ys))
+            s2 = s2 - math.exp(col.w * (y - x) / len(ys))
+        return s1 / len(ys) < s2 / len(ys)
+    def half(self, rows = None, cols = None, above = None):
+        def dist(row1,row2): 
+            return self.dist(row1,row2,cols)
+        rows = rows or self.rows
+        A    = above or any(rows)
+        B    = self.furthest(A,rows)['row']
+        c    = dist(A,B)
+        left, right = [], []
+        def project(row):
+            x, y = cosine(dist(row,A), dist(row,B), c)
+            try:
+                row.x = row.x
+                row.y = row.y
+            except:
+                row.x = x
+                row.y = y
+            return {'row' : row, 'x' : x, 'y' : y}
+        for n,tmp in enumerate(sorted(list(map(project, rows)), key=itemgetter('x'))):
+            if n < len(rows)//2:
+                left.append(tmp['row'])
+                mid = tmp['row']
+            else:
+                right.append(tmp['row'])
+        return left, right, A, B, mid, c
     
-
-
-
+    def cluster(self, rows = None , cols = None, above = None):
+        rows = rows or self.rows
+        cols = cols or self.cols.x
+        node = { 'data' : self.clone(rows) }
+        if len(rows) >= 2:
+            left, right, node['A'], node['B'], node['mid'], node['c'] = self.half(rows,cols,above)
+            node['left']  = self.cluster(left,  cols, node['A'])
+            node['right'] = self.cluster(right, cols, node['B'])
+        return node
