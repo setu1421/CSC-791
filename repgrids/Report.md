@@ -29,44 +29,7 @@ We chose Netflix movies as the topic for the Task 5. The attributes and examples
 
 **Cluster Example:**
 
-80
-|..58
-|..|..45
-|..|..|..AmericanSniper
-|..|..|..LordOfTheRings
-|..|..31
-|..|..|..KingsMan
-|..|..|..31
-|..|..|..|..SocialNetwork
-|..|..|..|..Parasite
-|..46
-|..|..44
-|..|..|..RushHour
-|..|..|..Sully
-|..|..50
-|..|..|..IceAge
-|..|..|..43
-|..|..|..|..BicycleThieves
-|..|..|..|..Titanic
-62
-|..37
-|..|..29
-|..|..|..WarMovie:RomanticMovie
-|..|..|..ComedyMovie:HorrorMovie
-|..|..48
-|..|..|..EducationalMovie:EntertainerMovie
-|..|..|..33
-|..|..|..|..WatchOnceMovie:WatchMultipleMovie
-|..|..|..|..BadMovie:GoodMovie
-|..57
-|..|..40
-|..|..|..ChildrenMovie:AdultMovie
-|..|..|..AnimeMovie:NonAnimeMovie
-|..|..45
-|..|..|..ShortMovie:LongMovie
-|..|..|..55
-|..|..|..|..NonExpensiveMovie:ExpensiveMovie
-|..|..|..|..ClassicMovie:ThrillerMovie
+![cluster](https://github.com/setu1421/CSC-791/blob/aadbaffc11bd3b514efc3a25115e468377903d30/repgrids/cluster.png)
 
 
 
