@@ -27,8 +27,10 @@ def main():
                 if egs[what]() == False:
                     fails += 1
                     list.append('❌ fail: ' + what)
+                    print('❌ fail: ' + what)
                 else:
                     list.append('✅ pass: ' + what)
+                    print('✅ pass: ' + what)
     # Upload the test results             
     FileWriter.uploadTestResults(list, "grid") 
     # Return the fails if any               
