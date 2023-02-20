@@ -9,7 +9,9 @@ from data import Data
 from num import Num
 from options import options
 from sym import Sym
-from utils import csv, rnd, rand, set_seed, oo, rint, adds, cliffsDelta
+from utils import *
+from TestEngine import *
+
 
 help = """
 main.py : a rep grid processor
@@ -70,116 +72,23 @@ def main(funs, saved=None, fails=None):
 # Examples
 egs = {}
 
-
 def eg(key, s, fun):
     global help
     egs[key] = fun
     help += "  -g  {}\t{}\n".format(key, s)
 
-def check_the():
-    return str(options)
+if __name__ == '__main__':    
 
-def check_rand():
-    set_seed(1)
-    t = []
-    for i in range(1, 1000 + 1):
-        t.append(rint(100))
-
-    set_seed(1)
-    u = []
-    for i in range(1, 1000 + 1):
-        u.append(rint(100))
-
-    for k, v in enumerate(t):
-        assert v == u[k]
-        
-
-def check_some():
-    options['Max'] = 32
-    num1 = Num()
-    for i in range(1,10000+1):
-        num1.add(i)
-    print(num1.has())
-
-def check_nums():
-    num1,num2 = Num(), Num()
-    
-    set_seed(options["seed"])
-    for i in range(1, 10000 + 1):
-        num1.add(rand())
-
-    for i in range(1, 10000 + 1):
-        num2.add(rand()**2)
-    print(1,rnd(num1.mid()), rnd(num1.div()))
-    print(2,rnd(num2.mid()), rnd(num2.div())) 
-    return .5 == rnd(num1.mid()) and num1.mid()> num2.mid()
-
-def check_syms():
-    sym=Sym()
-    adds(sym, ["a","a","a","a","b","b","c"])
-    print (sym.mid(), rnd(sym.div())) 
-    return 1.38 == rnd(sym.div())
-
-def check_csv():
-    n=0
-    def f(t):
-        nonlocal n
-        n += len(t)
-    csv(options['file'], f) 
-    return 3192 == n
-
-def check_data():
-    data=Data()
-    data.read(options['file'])
-    col=data.cols.x[0]
-    print(col.lo,col.hi, col.mid(),col.div())
-    oo(data.stats())
-
-def check_clone():
-    data1=Data()
-    data1.read(options['file'])
-    data2=Data()
-    data2.clone(data1,data1.rows) 
-    oo(data1.stats())
-    oo(data2.stats())
-
-def check_cliffs():
-    assert(False == cliffsDelta( [8,7,6,2,5,8,7,3],[8,7,6,2,5,8,7,3]),"1")
-    assert(True  == cliffsDelta( [8,7,6,2,5,8,7,3], [9,9,7,8,10,9,6]),"2") 
-    t1,t2=[],[]
-    for i in range(1,1000+1):
-        t1.append(rand()) 
-    for i in range(1,1000+1):
-        t2.append(rand()**.5)
-    assert(False == cliffsDelta(t1,t1),"3") 
-    assert(True  == cliffsDelta(t1,t2),"4") 
-    diff,j=False,1.0
-    while not diff:
-        def f(x):
-            nonlocal j
-            return x*j
-        t3=map(f, t1)
-        diff=cliffsDelta(t1,t3)
-        print(">",rnd(j),diff) 
-        j=j*1.025
-
-eg("the","show options",check_the)
-
-eg("rand","demo random number generation", check_rand)
-
-eg("some","demo of reservoir sampling", check_some)
-
-# eg("nums","demo of Num", check_nums)
-
-eg("syms","demo SYMS", check_syms)
-
-eg("csv","reading csv files", check_csv)
-
-# eg("data", "showing data sets", check_data)
-
-# eg("clone","replicate structure of a DATA", check_clone)
-
-eg("cliffs","stats tests", check_cliffs)
-  
-
-main(egs)
+    eg("the","show options",check_the)
+    eg("rand","demo random number generation", check_rand)
+    eg("some","demo of reservoir sampling", check_some)
+    eg("nums","demo of Num", check_nums)
+    eg("syms","demo SYMS", check_syms)
+    eg("csv","reading csv files", check_csv)
+    eg("data", "showing data sets", check_data)
+    eg("clone","replicate structure of a DATA", check_clone)
+    eg("cliffs","stats tests", check_cliffs)
+    eg("tree","make snd show tree of clusters", check_tree)
+    eg("sway","optimizing", check_sway)
+    eg("bins","find deltas between best and rest", check_bins)
+    main(egs)
