@@ -1,206 +1,205 @@
-import sys, re, math, copy, json
-from config import *
-from pathlib import Path
-import os
+import copy as cp
+import io
+import json
+import math
+import random
+import re
+from typing import List, Union
 
-# Retrieve settings
-def settings(s):
-    return dict(re.findall("\n[\s]+[-][\S]+[\s]+[-][-]([\S]+)[^\n]+= ([\S]+)",s))
 
-# Cast types and return
-def coerce(s):
-    if s == 'true':
-        return True
-    elif s == 'false':
-        return False
-    elif s.isdigit():
-        return int(s)
-    elif '.' in s and s.replace('.','').isdigit():
-        return float(s)
-    else:
-        return s
+def rint(lo: float=0, hi: float=1):
+    return math.floor(0.5 + rand(lo, hi))
 
-# Read command line arguments
-def cli(options):
-    args = sys.argv[1:]
-    for k, v in options.items():
-        for n, x in enumerate(args):
-            if x == '-'+k[0] or x == '--'+k:
-                if v == 'false':
-                    v = 'true'
-                elif v == 'true':
-                    v = 'false'
-                else:
-                    v = args[n+1]
-        options[k] = coerce(v)
-    return options
 
-# Add Examples
-def eg(key, str, fun):
-    egs[key] = fun
-    global help
-    help = help + '  -g '+ key + '\t' + str + '\n'
+class Random:
+    def __init__(self):
+        self.seed = 937162211
 
-# Round to Integer
-def rint(lo,hi):
-    return 4 or math.floor(0.5 + rand(lo,hi))
+    def set_seed(self, value: int):
+        self.seed = value
 
-# Return random number
-def rand(lo = 0, hi = 1):
-    global Seed
-    Seed = (16807 * Seed) % 2147483647
-    return lo + (hi-lo) * Seed / 2147483647
+    def rand(self, lo=0, hi=1):
+        """
+        Generates a pseudo-random number using seed.
 
-# Round to n places
-def rnd(n, nPlaces = 3):
-    mult = 10**nPlaces
+        :param lo: Lower limit of generated number
+        :param hi: Higher limit of generated number
+        :return: Pseudo-random number
+        """
+
+        self.seed = (16807 * self.seed) % 2147483647
+        return lo + (hi - lo) * self.seed / 2147483647
+
+
+_inst = Random()
+rand = _inst.rand
+set_seed = _inst.set_seed
+
+
+def rnd(n: float, n_places: int = 2) -> float:
+    """
+    Rounds number n to n places.
+
+    :param n: Number
+    :param n_places: Number of decimal places to round
+    :return: Rounded number
+    """
+    mult = math.pow(10, n_places)
     return math.floor(n * mult + 0.5) / mult
 
-# Read csv file
+
+def coerce(v):
+    """
+    Attempts to convert v to an int, float, bool, or keep as string
+
+    :param v: String to convert
+    :return: v converted to its type
+    """
+    types = [int, float]
+
+    for t in types:
+        try:
+            return t(v)
+        except ValueError:
+            pass
+
+    bool_vals = ["true", "false"]
+    if v.lower() in bool_vals:
+        return v.lower() == "true"
+
+    return v
+
+
 def csv(sFilename, fun):
-    sFilename = Path(sFilename)
-    if sFilename.exists() and sFilename.suffix == '.csv':
-        t = []
-        with open(sFilename.absolute(), 'r', encoding='utf-8') as file:
-            for _, line in enumerate(file):
-                row = list(map(coerce, line.strip().split(',')))
-                t.append(row)
-                fun(row)
-    else:
-        print("File path does not exist OR File not csv, given path: ", sFilename.absolute())
-        return
+    """
+    call `fun` on rows (after coercing cell text)
 
-def kap(t, fun):
-    u = {}
-    for v in t:
-        k = t.index(v)
-        v, k = fun(k,v) 
-        u[k or len(u)] = v
-    return u
+    :param sFilename: String of the file to read
+    :param fun: function to call per each row
+    """
+    f = io.open(sFilename)
+    while True:
+        s = f.readline().rstrip()
+        if s:
+            t = []
+            for s1 in re.findall("([^,]+)", s):
+                t.append(coerce(s1))
+            fun(t)
+        else:
+            return f.close()
 
-# Find cosine distance
-def cosine(a,b,c):
-    den = 1 if c == 0 else 2*c
-    x1 = (a**2 + c**2 - b**2) / den
+
+def cosine(a, b, c):
+    """
+    find x, y from a line connecting 'a' to 'b'
+    """
+    # might be an issue if c is 0
+    if c == 0:
+        return 0
+    x1 = (a ** 2 + c ** 2 - b ** 2) / (2 * c)
     x2 = max(0, min(1, x1))
-    y  = abs((a**2 - x2**2))**.5
-    if isinstance(y, complex):
-        print('a', a)
-        print('x1', x1)
-        print('x2', x2)
+    #  -- in the incremental case, x1 might be outside 0,1
+    y = (a ** 2 - x2 ** 2) ** .5
+
+    if type(y) == complex:
+        y = y.real
     return x2, y
 
-# Return any number
-def any(t):
-    return t[rint(0, len(t) - 1)]
 
-# Return a sample
-def many(t,n):
-    u=[]
-    for _ in range(1,n+1):
-        u.append(any(t))
-    return u
+def show(node, what: str = "mid", cols: List[Union['Sym', 'Num']] = None, nplaces: int = 2, lvl: int = 0) -> None:
+    """
+    Prints the tree.
 
-# Show the cluster
-def show(node, what, cols, nPlaces, lvl = 0):
-  if node:
-    print('|..' * lvl, end = '')
-    if not node.get('left'):
-        print(node['data'].rows[-1].cells[-1])
-    else:
-        print(int(rnd(100*node['c'], 0)))
-    show(node.get('left'), what,cols, nPlaces, lvl+1)
-    show(node.get('right'), what,cols,nPlaces, lvl+1)
+    :param node: Node of tree
+    :param what: Statistics to print
+    :param cols: Columns to print stats for
+    :param nplaces: Number of decimals to round the values to
+    :param lvl: Level in the tree
+    """
+    if node:
+        print(
+            f"{'|.. ' * lvl}"
+            f"{node['data'].rows[-1].cells[-1] if 'left' not in node else rnd(100 * node['c'])}"
+        )
 
-# Make a deepcopy of an object
-def deepcopy(t):
-    return copy.deepcopy(t)
+        show(node.get('left', None), what, cols, nplaces, lvl + 1)
+        show(node.get('right', None), what, cols, nplaces, lvl + 1)
 
-# Find Rep Cols
-def repCols(cols, DATA):
-    cols = deepcopy(cols)
-    for col in cols:
-        col[len(col) - 1] = col[0] + ":" + col[len(col) - 1]
-        for j in range(1, len(col)):
-            col[j-1] = col[j]
-        col.pop()
-    first_col = ['Num' + str(k+1) for k in range(len(cols[1])-1)]
-    first_col.append('thingX')
-    cols.insert(0, first_col)
-    return DATA(cols)
 
-# Find Rep Rows
-def repRows(t, DATA, rows):
-    rows = deepcopy(rows)
-    for j, s in enumerate(rows[-1]):
-        rows[0][j] = rows[0][j] + ":" + s
-    rows.pop()
-    for n, row in enumerate(rows):
-        if n == 0:
-            row.append('thingX')
-        else:
-            u = t['rows'][- n]
-            row.append(u[len(u) - 1])
-    return  DATA(rows)
+def many(t, n, seed=937162211):
+    """
+    returns some items from `t`
+    """
+    random.seed(seed)
+    return random.choices(t, k=n)
 
-# Read Rep Grid from file
-def dofile(sFile):
-    file = open(sFile, 'r', encoding='utf-8')
-    text  = re.findall(r'(?<=return )[^.]*', file.read())[0].replace('{', '[').replace('}',']').replace('=',':').replace('[\n','{\n' ).replace(' ]',' }' ).replace('\'', '"').replace('_', '"_"')
-    file.close()
-    return json.loads(re.sub("(\w+):", r'"\1":', text))
 
-# Print dictionary object
-def oo(t):
-    d = t.__dict__
-    d['a'] = t.__class__.__name__
-    d['id'] = id(t)
-    d = dict(sorted(d.items()))
-    print(d)
+def any(t, seed=937162211):
+    """
+    returns one items at random
+    """
+    random.seed(seed)
+    return random.choices(t)[0]
 
-# Transpose matrix
+
 def transpose(t):
-    u=[]
-    for i in range(len(t[1])):
+    u = []
+    for i in range(0, len(t[0])):
         u.append([])
-        for j in range(len(t)):
+        for j in range(0, len(t)):
             u[i].append(t[j][i])
     return u
 
-# Retrive RepGrid
-def repgrid(sFile, DATA):
-    t = dofile(sFile)
-    rows = repRows(t, DATA, transpose(t['cols']))
-    cols = repCols(t['cols'], DATA)
-    show(rows.cluster(),"mid",rows.cols.all,1)
-    show(cols.cluster(),"mid",cols.cols.all,1)
-    repPlace(rows)
 
-# RepPlace Function
-def repPlace(data):
-    n,g = 20,{}
-    for i in range(1, n+1):
-        g[i]={}
-        for j in range(1, n+1):
-            g[i][j]=' '
-    maxy = 0
-    print('')
-    for r,row in enumerate(data.rows):
-        c = chr(97+r).upper()
-        print(c, row.cells[-1])
-        x,y= row.x*n//1, row.y*n//1
-        maxy = int(max(maxy,y+1))
-        g[y+1][x+1] = c
-    print('')
-    for y in range(1,maxy+1):
-        print(' '.join(g[y].values()))
+def helper(k):
+    return "Num" + str(k)
 
 
-# FileWriter Utility Class
-class FileWriter:
-    # Upload Test Results to a File
-    @staticmethod
-    def uploadTestResults(items, filename):
-        file_path = os.getcwd() + "/etc/out/" + filename + ".out"
-        with open(file_path,'w+') as f:
-            f.write('\n'.join(items))        
+def copy(t):
+    return cp.deepcopy(t)
+
+
+def do_file(file):
+    # if local X = y is present, find both the thing to replace and what to replace it with
+    data = None
+    with open(file, "r") as fp:
+        data = fp.read()
+    vars = re.match("local (.*) = (.*)\n", data)
+    if vars:
+        variable, value = vars.groups()
+        data = data.replace(variable, value)
+        data = re.sub("local .* = .*\n", "", data)
+    # remove the return statement
+    data = data.replace("return ", "")
+    # remove newlines
+    data = data.replace("\n", "")
+    # replace domain= , cols= , rows=
+    # change X=y to "X":y
+    terms = ["domain", "cols", "rows"]
+    for term in terms:
+        data = re.sub("{}\s*=".format(term), '"{}":'.format(term), data)
+    # replace { } with [ ]
+    first, last = data.index("{"), data.rindex("}")
+    data = data[first + 1:last].replace("{", "[").replace("}", "]")
+    data = "{" + data + "}"
+
+    # replace ' with "
+    data = data.replace("'", '"')
+    json_obj = json.loads(data)
+    return json_obj
+
+
+def oo(t):
+    td = t.__dict__
+    td['a'] = t.__class__.__name__
+    td['id'] = id(t)
+    print(dict(sorted(td.items())))
+
+
+def last(t):
+    return t[-1]
+
+def adds(col, t):
+    for _, x in enumerate(t or {}):
+        col.add(x)
+    return col
