@@ -2,13 +2,10 @@ import copy as cp
 import io
 import json
 import math
-import random
 import re
 from typing import List, Union
 
-
-def rint(lo: float=0, hi: float=1):
-    return math.floor(0.5 + rand(lo, hi))
+from sym import Sym
 
 
 class Random:
@@ -30,9 +27,13 @@ class Random:
         self.seed = (16807 * self.seed) % 2147483647
         return lo + (hi - lo) * self.seed / 2147483647
 
+    def rint(self, lo=0, hi=1):
+        return math.floor(0.5 + rand(lo, hi))
+
 
 _inst = Random()
 rand = _inst.rand
+rint = _inst.rint
 set_seed = _inst.set_seed
 
 
@@ -126,20 +127,18 @@ def show(node, what: str = "mid", cols: List[Union['Sym', 'Num']] = None, nplace
         show(node.get('right', None), what, cols, nplaces, lvl + 1)
 
 
-def many(t, n, seed=937162211):
+def many(t, n):
     """
     returns some items from `t`
     """
-    random.seed(seed)
-    return random.choices(t, k=n)
+    return [any(t) for _ in range(n)]
 
 
-def any(t, seed=937162211):
+def any(t):
     """
     returns one items at random
     """
-    random.seed(seed)
-    return random.choices(t)[0]
+    return t[rint(len(t)) - 1]
 
 
 def transpose(t):
@@ -199,50 +198,67 @@ def oo(t):
 def last(t):
     return t[-1]
 
+
 def adds(col, t):
     for _, x in enumerate(t or {}):
         col.add(x)
     return col
 
-def norm(num,n):
+
+def norm(num, n):
     return n if n == "?" else (n - num.lo) / (num.hi - num.lo + 1 / float("inf"))
 
-def dist(data,t1,t2,cols = None):
-    def dist1(col, x, y):
-        if x == "?" and y == "?":
-            return 1
-        if col.isSym:
-            return 0 if x == y else 1
-        x, y = norm(col, x), norm(col, y)
-        if x == "?":
-            x = 1 if y < 0.5 else 1
-        if y == "?":
-            y = 1 if x < 0.5 else 1
-        return abs(x - y)
-    d = 0
-    n = 1 / float("inf")
-    cols = cols or data.cols.x
-    for col in cols:
-        n += + 1
-        d +=  dist1(col, t1[col.at], t2[col.at])**2
-    return (d / n)**(0.5)
 
 def per(t, p):
     p = math.floor(((p or 0.5) * len(t)) + 0.5)
-    return t[max(1, min(len(t), p))]
+    return t[max(0, min(len(t), p) - 1)]
 
-def cliffsDelta(lst1, lst2, d: float = 0.147) :
-    n1, n2 = len(lst1), len(lst2)
-    m= 0
-    for i in range(n1):
-        for j in range(n2):
-            if lst1[i] < lst2[j]:
-                m += 1
-            elif lst1[i] > lst2[j]:
-                m -= 1
-    if m == 0:
-        return False
-    else:
-        x = n1 * n2
-        d = abs(m) / x
-        return d >= 0.147
+
+def cliffsDelta(ns1, ns2):
+    if len(ns1) > 256:
+        ns1 = many(ns1, 256)
+    if len(ns2) > 256:
+        ns2 = many(ns2, 256)
+    if len(ns1) > 10 * len(ns2):
+        ns2 = many(ns1, 10 * len(ns2))
+    if len(ns2) > 10 * len(ns1):
+        ns2 = many(ns2, 10 * len(ns1))
+
+    n, gt, lt = 0, 0, 0
+    for x in ns1:
+        for y in ns2:
+            n = n + 1
+            if x > y:
+                gt = gt + 1
+
+            elif x < y:
+                lt = lt + 1
+    return abs(lt - gt) / n > 0.147
+
+
+def kap(t, fun, u={}):
+    u = {}
+    what = enumerate(t)
+    if type(t) == dict:
+        what = t.items()
+    for k, v in what:
+        v, k = fun(k, v)
+        if not k:
+            u[len(u)] = v
+        else:
+            u[k] = v
+    return u
+
+
+def diffs(nums1, nums2, the):
+    def func(k, nums):
+        return cliffsDelta(nums.has(), nums2[k].has()), nums.txt
+
+    return kap(nums1, func)
+
+def showTree(tree, lvl=0):
+    if tree:
+        print("{}[{}] ".format(("|.. ") * lvl, len(tree['data'].rows)), end="")
+        print((lvl == 0 or not tree.get('left', None)) and (tree['data'].stats()) or "")
+        showTree(tree.get('left', None), lvl + 1)
+        showTree(tree.get('right', None), lvl + 1)
