@@ -214,27 +214,6 @@ def per(t, p):
     return t[max(0, min(len(t), p) - 1)]
 
 
-def cliffsDelta(ns1, ns2):
-    if len(ns1) > 256:
-        ns1 = many(ns1, 256)
-    if len(ns2) > 256:
-        ns2 = many(ns2, 256)
-    if len(ns1) > 10 * len(ns2):
-        ns2 = many(ns1, 10 * len(ns2))
-    if len(ns2) > 10 * len(ns1):
-        ns2 = many(ns2, 10 * len(ns1))
-
-    n, gt, lt = 0, 0, 0
-    for x in ns1:
-        for y in ns2:
-            n = n + 1
-            if x > y:
-                gt = gt + 1
-
-            elif x < y:
-                lt = lt + 1
-    return abs(lt - gt) / n > 0.147
-
 
 def kap(t, fun, u={}):
     u = {}
@@ -262,3 +241,9 @@ def showTree(tree, lvl=0):
         print((lvl == 0 or not tree.get('left', None)) and (tree['data'].stats()) or "")
         showTree(tree.get('left', None), lvl + 1)
         showTree(tree.get('right', None), lvl + 1)
+
+def mid(t):
+    if t["has"]:
+        t = t["has"]
+    n = len(t) // 2
+    return (t[n] + t[n + 1]) / 2 if len(t) % 2 == 0 else t[n + 1]

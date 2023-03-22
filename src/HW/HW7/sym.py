@@ -1,45 +1,58 @@
+import collections
 import math
+from typing import Union
 
-# Class for SYM
-class SYM:
-    # Constructor of SYM
-    def __init__(self, at=None, txt=None):
-        self.at = at if at else 0
-        self.txt = txt if txt else ""
+
+class Sym:
+    """
+    Summarizes a stream of Symbols.
+    """
+
+    def __init__(self, at: int = 0, txt: str = ""):
+        self.at = at
+        self.txt = txt
+
         self.n = 0
-        self.has = {}
+        self.has = collections.defaultdict(int)
         self.most = 0
         self.mode = None
-    
-     # Add a new string
-    def add(self, x):
-        if not x == "?":
-            self.n +=1
-            self.has[x]= 1 + (self.has[x] if x in self.has.keys() else 0)
+
+    def add(self, x: str, n=1):
+        """
+        Updates counts of things seen so far
+
+        :param x: Symbol to add
+        """
+        if x != "?":
+            self.n = self.n + n
+            self.has[x] = n + (self.has[x] or 0)
             if self.has[x] > self.most:
                 self.most = self.has[x]
                 self.mode = x
+        return x
 
-    # Find the mode of string
     def mid(self):
+        """
+        Returns the mode
+        """
         return self.mode
 
-    # Find the entropy of string 
     def div(self):
+        """
+        Returns the entropy
+        """
+
         def fun(p):
-            return p * math.log2(p)
+            return p * math.log(p, 2)
+
         e = 0
+
         for _, n in self.has.items():
-            e = e + fun(n/self.n)
+            e = e + fun(n / self.n)
         return -e
-    
-    # Round of symbolic values
-    def rnd(self,x,n):
-        return x
-    
-    # Calculate distance between two values
+
     def dist(self, s1, s2):
-        if s1=="?" and s2=="?":
+        if s1 == '?' and s2 == '?':
             return 1
         elif s1 == s2:
             return 0

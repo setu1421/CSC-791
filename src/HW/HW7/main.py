@@ -5,35 +5,27 @@ __version__ = "1.0.0"
 __license__ = "MIT"
 
 
-from explain import Explain, show_rule, selects
-from data import Data
+import random
 from options import options
-from discretization import bins, value
 from num import Num
-from sym import Sym
-from utils import adds, set_seed, rint, rand, rnd, csv, cliffsDelta, showTree, diffs
+from stats import samples, gaussian, RX, ScottKnott, tiles, bootstrap, cliffsDelta
+from utils import mid
 
 help = """
 
-xpln: multi-goal semi-supervised explanation
+stats: shows different statistical methods
   
 USAGE: python3 main.py [OPTIONS] [-g ACTIONS]
   
 OPTIONS:
-  -b  --bins    initial number of bins       = 16
-  -c  --cliffs  cliff's delta threshold      = .147
-  -d  --d       different is over sd*d       = .35
-  -f  --file    data file                    = ../../etc/data/auto93.csv
-  -F  --Far     distance to distant          = .95
-  -g  --go      start-up action              = nothing
-  -h  --help    show help                    = false
-  -H  --Halves  search space for clustering  = 512
-  -m  --min     size of smallest cluster     = .5
-  -M  --Max     numbers                      = 512
-  -p  --p       dist coefficient             = 2
-  -r  --rest    how many of rest to sample   = 4
-  -R  --Reuse   child splits reuse a parent pole = true
-  -s  --seed    random number seed           = 937162211
+  -h  --help    show help                            = false
+  -g  --go      start-up action                      = all
+  -b  --bootstrap   number of samples to bootstrap   = 512
+  -o  --conf   confidence interval                   = 0.05
+  -c  --cliff   cliff cutoff point                   = 0.4
+  -h  --cohen   cohen's D value                      = 0.35
+  -w  --width   width                                = 40
+  -f  --Fmt     format string                        = {:6.2f}
 """
 
 
@@ -59,9 +51,7 @@ def main(funs, saved=None, fails=None):
     else:
         for what, fun in funs.items():
             if options['go'] == "all" or what == options['go']:
-                for k, v in saved.items():
-                    options[k] = v
-
+    
                 if funs[what]() is False:
                     fails = fails + 1
                     print("❌ fail:", what, "-"*60)
@@ -79,228 +69,158 @@ def eg(key, s, fun):
     egs[key] = fun
     help += "  -g  {}\t{}\n".format(key, s)
 
-
-def check_the():
-    return str(options)
-
-
-def check_rand():
-    set_seed(1)
-    t = []
-
-    for i in range(1, 1000 + 1):
-        t.append(rint(100))
-
-    set_seed(1)
-    u = []
-
-    for i in range(1, 1000 + 1):
-        u.append(rint(100))
-
-    for k, v in enumerate(t):
-        assert v == u[k]
-
-
-def check_some():
-    options['Max'] = 32
-    num1 = Num()
-    set_seed(options['seed'])
-    for i in range(1, 10000 + 1):
-        num1.add(i)
-
-    print(num1.has())
-
-
-def check_nums():
-    num1, num2 = Num(), Num()
-
-    set_seed(options["seed"])
-    for i in range(1, 10000 + 1):
-        num1.add(rand())
-
-    for i in range(1, 10000 + 1):
-        num2.add(rand() ** 2)
-
-    print(1, rnd(num1.mid()), rnd(num1.div()))
-    print(2, rnd(num2.mid()), rnd(num2.div()))
-
-    return .5 == rnd(num1.mid()) and num1.mid() > num2.mid()
-
-
-def check_syms():
-    sym = Sym()
-    adds(sym, ["a", "a", "a", "a", "b", "b", "c"])
-
-    print(sym.mid(), rnd(sym.div()))
-
-    return 1.38 == rnd(sym.div())
-
-
-def check_csv():
-    n = 0
-
-    def f(t):
-        nonlocal n
-        n += len(t)
-
-    csv(options['file'], f)
-    return 3192 == n
-
-
-def check_data():
-    data = Data()
-    data.read(options['file'])
-
-    col = data.cols.x[0]
-
-    print(col.lo, col.hi, col.mid(), col.div())
-    print(data.stats())
-
-
-def check_clone():
-    data1 = Data()
-    data1.read(options['file'])
-
-    data2 = data1.clone(data1, data1.rows)
-
-    print(data1.stats())
-    print(data2.stats())
-
-
-def check_cliffs():
-    assert not cliffsDelta([8, 7, 6, 2, 5, 8, 7, 3], [8, 7, 6, 2, 5, 8, 7, 3]), "1"
-    assert cliffsDelta([8, 7, 6, 2, 5, 8, 7, 3], [9, 9, 7, 8, 10, 9, 6]), "2"
-
-    t1, t2 = [], []
-
-    for i in range(1, 1000 + 1):
-        t1.append(rand())
-
-    for i in range(1, 1000 + 1):
-        t2.append(rand() ** .5)
-
-    assert not cliffsDelta(t1, t1), "3"
-    assert cliffsDelta(t1, t2), "4"
-
-    diff, j = False, 1.0
-
-    while not diff:
-        def f(x):
-            nonlocal j
-            return x * j
-
-        t3 = map(f, t1)
-        diff = cliffsDelta(t1, list(t3))
-        print(">", rnd(j), diff)
-        j = j * 1.025
-
-
-def check_dist():
-    data = Data()
-    data.read(options['file'])
-
-    num = Num()
-
-    for _, row in enumerate(data.rows):
-        num.add(data.dist(row, data.rows[0]))
-
-    d = {"lo": num.lo, "hi": num.hi, "mid": rnd(num.mid()), "div": rnd(num.div())}
-    print(d)
-
-
-def check_half():
-    data = Data()
-    data.read(options['file'])
-    set_seed(options['seed'])
-
-    left, right, A, B, c, _ = data.half()
-    print(len(left), len(right))
-
-    l, r = Data.clone(data, left), Data.clone(data, right)
-    print("l", l.stats())
-    print("r", r.stats())
-
-
-def check_tree():
-    data1 = Data()
-    data1.read(options['file'])
-    set_seed(options['seed'])
-
-    showTree(data1.tree())
-
-
-def check_sway():
-    data = Data()
-    data.read(options['file'])
-    set_seed(options['seed'])
-
-    best, rest, _ = data.sway()
-
-    print("\nall ", data.stats())
-    print("    ", data.stats(what="div"))
-    print("\nbest", best.stats())
-    print("    ", best.stats(what="div"))
-    print("\nrest", rest.stats())
-    print("    ", rest.stats(what="div"))
-    print("\nall ~= best?", diffs(best.cols.y, data.cols.y, options))
-    print("best ~= rest?", diffs(best.cols.y, rest.cols.y, options))
-
-
-def check_bins():
-    data = Data()
-    data.read(options['file'])
-    set_seed(options['seed'])
-
-    best, rest,_ = data.sway()
-    print("all", "", "", "", {"best": len(best.rows), "rest": len(rest.rows)})
-
-    b4 = None
-    for k, t in enumerate(bins(data.cols.x, {"best": best.rows, "rest": rest.rows})):
-        for _, range_ in enumerate(t):
-            if range_.txt != b4:
-                print()
-
-            b4 = range_.txt
-
-            print(
-                range_.txt, range_.lo, range_.hi,
-                rnd(value(range_.y.has, n_b=len(best.rows), n_r=len(rest.rows), s_goal="best")),
-                dict(range_.y.has)
-            )
-
-def check_xpln():
-    data=Data()
-    data.read(options['file'])
-    set_seed(options['seed'])
-    best,rest,evals = data.sway()
-    x = Explain(best, rest)
-    rule,most= x.xpln(data,best,rest)
-    print("\n-----------\nexplain=", show_rule(rule))
-    data1= Data()
-    data1.read(data,selects(rule,data.rows))
-    print("all               ",data.stats(),data.stats(what="div"))
-    print("sway with {:5} evals".format(evals),(best.stats()),(best.stats(what="div")))
-    print("xpln on {:5} evals".format(evals),(data1.stats()),(data1.stats(what="div")))
-    top2,_ = data.betters(len(best.rows))
-    top = Data()
-    top.read(data,top2)
-    print("sort with {:5} evals".format(len(data.rows)) ,(top.stats()), (top.stats(what="div")))
-
-
-eg("the", "show options", check_the)
-eg("rand", "demo random number generation", check_rand)
-eg("some", "demo of reservoir sampling", check_some)
-eg("nums", "demo of Num", check_nums)
-eg("syms", "demo SYMS", check_syms)
-eg("csv", "reading csv files", check_csv)
-eg("data", "showing data sets", check_data)
-eg("clone", "replicate structure of a Data", check_clone)
-eg("cliffs", "stats tests", check_cliffs)
-eg("dist", "distance test", check_dist)
-eg("half", "divide data in halg", check_half)
-eg("tree", "make snd show tree of clusters", check_tree)
-eg("sway", "optimizing", check_sway)
-eg("bins", "find deltas between best and rest", check_bins)
-eg("xpln","explore explanation sets", check_xpln)
-
-main(egs)
+n=1
+def check_ok():
+    random.seed(n)
+
+def check_sample(): 
+    for i in range(1,10): 
+        print("\t" + "".join(samples(["a","b","c","d","e"])))
+
+
+def check_num():
+  n=Num([1,2,3,4,5,6,7,8,9,10])
+  print("\t",n.n, n.mu, n.sd)
+
+
+def check_gauss():
+    t=[]
+    for i in range(10**4):
+        t.append(gaussian(10,2))
+    n=Num(t)
+    print("\t",n.n,n.mu,n.sd)
+
+
+def check_basic():
+    print(
+        "\t\ttrue",
+        bootstrap([8, 7, 6, 2, 5, 8, 7, 3], [8, 7, 6, 2, 5, 8, 7, 3]),
+        cliffsDelta([8, 7, 6, 2, 5, 8, 7, 3], [8, 7, 6, 2, 5, 8, 7, 3])
+    )
+
+    print(
+        "\t\tfalse",
+        bootstrap([8, 7, 6, 2, 5, 8, 7, 3], [9, 9, 7, 8, 10, 9, 6]),
+        cliffsDelta([8, 7, 6, 2, 5, 8, 7, 3], [9, 9, 7, 8, 10, 9, 6])
+    )
+
+    print(
+        "\t\tfalse",
+        bootstrap([0.34, 0.49, 0.51, 0.6, .34, .49, .51, .6], [0.6, 0.7, 0.8, 0.9, .6, .7, .8, .9]),
+        cliffsDelta([0.34, 0.49, 0.51, 0.6, .34, .49, .51, .6], [0.6, 0.7, 0.8, 0.9, .6, .7, .8, .9])
+    )
+
+
+def check_pre():
+    print("\neg3")
+    d = 1
+
+    for i in range(1,11):
+        t1, t2 = [], []
+
+        for j in range(1,32):
+            t1.append(gaussian(10,1))
+            t2.append(gaussian(d * 10,1))
+
+        print("\t", f"{d:.2f}", d < 1.1 and "true" or "false", bootstrap(t1, t2), bootstrap(t1, t1))
+
+        d += 0.05
+
+
+def check_five():
+    tiles_ = tiles(ScottKnott([
+        RX({0.34, 0.49, 0.51, 0.6, .34, .49, .51, .6}, "rx1"),
+        RX({0.6, 0.7, 0.8, 0.9, .6, .7, .8, .9}, "rx2"),
+        RX({0.15, 0.25, 0.4, 0.35, 0.15, 0.25, 0.4, 0.35}, "rx3"),
+        RX({0.6, 0.7, 0.8, 0.9, 0.6, 0.7, 0.8, 0.9}, "rx4"),
+        RX({0.1, 0.2, 0.3, 0.4, 0.1, 0.2, 0.3, 0.4}, "rx5")
+    ]).run())
+
+    for rx in tiles_:
+        print(rx["name"], rx["rank"], rx["show"])
+
+def check_six():
+    tiles_ = tiles(ScottKnott([
+        RX({101,100,99,101,99.5,101,100,99,101,99.5}, "rx1"),
+        RX({101,100,99,101,100,101,100,99,101,100}, "rx2"),
+        RX({101,100,99.5,101,99,101,100,99.5,101,99}, "rx3"),
+        RX({101,100,99,101,100,101,100,99,101,100}, "rx4")
+    ]).run())
+
+    for rx in tiles_:
+        print(rx["name"], rx["rank"], rx["show"])
+
+def check_tiles():
+    rxs,a,b,c,d,e,f,g,h,j,k=[],[],[],[],[],[],[],[],[],[],[]
+    upper_limit=1001
+    for i in range(1,upper_limit):
+        a.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        b.append(gaussian(10.1,1))
+    for i in range(1,upper_limit):
+        c.append(gaussian(20,1))
+    for i in range(1,upper_limit):
+        d.append(gaussian(30,1))
+    for i in range(1,upper_limit):
+        e.append(gaussian(30.1,1))
+    for i in range(1,upper_limit):
+        f.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        g.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        h.append(gaussian(40,1))
+    for i in range(1,upper_limit):
+        j.append(gaussian(40,3))
+    for i in range(1,upper_limit):
+        k.append(gaussian(10,1))
+
+    for k, v in enumerate([a, b, c, d, e, f, g, h, j, k]):
+        rxs.append(RX(v, "rx" + str(k + 1)))
+    rxs.sort(key=lambda x: mid(x))
+    for rx in tiles(rxs):
+        print("", rx["name"], rx["show"])
+
+def check_sk():
+    rxs,a,b,c,d,e,f,g,h,j,k=[],[],[],[],[],[],[],[],[],[],[]
+    upper_limit=1001
+    for i in range(1,upper_limit):
+        a.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        b.append(gaussian(10.1,1))
+    for i in range(1,upper_limit):
+        c.append(gaussian(20,1))
+    for i in range(1,upper_limit):
+        d.append(gaussian(30,1))
+    for i in range(1,upper_limit):
+        e.append(gaussian(30.1,1))
+    for i in range(1,upper_limit):
+        f.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        g.append(gaussian(10,1))
+    for i in range(1,upper_limit):
+        h.append(gaussian(40,1))
+    for i in range(1,upper_limit):
+        j.append(gaussian(40,3))
+    for i in range(1,upper_limit):
+        k.append(gaussian(10,1))
+
+    for k, v in enumerate([a, b, c, d, e, f, g, h, j, k]):
+        rxs.append(RX(v, "rx" + str(k + 1)))
+    
+    for rx in tiles(ScottKnott(rxs).run()):
+        print("", rx['rank'], rx["name"], rx["show"])
+
+
+eg("pre", "check pre", check_pre)
+eg("ok", "check ok", check_ok)
+eg("sample", "check sample", check_sample)
+eg("num", "check num", check_num)
+eg("gauss", "check gauss", check_gauss)
+eg("basic", "check basic", check_basic)
+eg("tiles","check tiles", check_tiles)
+eg("sk","check sk", check_sk)
+eg("five", "check five", check_five)
+eg("six", "check six", check_six)
+
+if __name__ == "__main__":
+    main(egs)
